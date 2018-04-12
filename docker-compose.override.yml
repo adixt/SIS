@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  webapplication1:
+    environment: 
+      - ConnectionString=Server=(localdb)\\mssqllocaldb;Database=SIS;Trusted_Connection=True;   
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "80"
+networks:
+  default:
+    external:
+      name: nat
