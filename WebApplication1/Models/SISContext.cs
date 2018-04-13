@@ -13,6 +13,8 @@ namespace WebApplication1.Models
         { }
 
         public virtual DbSet<UsersNotSercure> UsersNotSercure { get; set; }
+        public virtual DbSet<UsersSecure> UsersSecure { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,6 +27,21 @@ namespace WebApplication1.Models
                 entity.Property(e => e.Password)
                     .IsRequired()
                     .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<UsersSecure>(entity =>
+            {
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Password)
+                    .IsRequired()
+                    .IsUnicode(true);
+
+                entity.Property(e => e.Salt)
+                   .IsRequired()
+                   .IsUnicode(true);
             });
 
             modelBuilder.Entity<UsersNotSercure>().HasData(

@@ -22,7 +22,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace WebApplication1.Controllers
 {
     [Produces("application/json")]
-    [Route("api/UsersNotSercures")]
+    [Route("api/SIS")]
     public class UsersNotSercuresController : Controller
     {
         private readonly SISContext _context;
@@ -36,14 +36,49 @@ namespace WebApplication1.Controllers
         }
 
         // GET: api/UsersNotSercures
-        [HttpGet]
+        [HttpGet("getAllInsecure")]
         public IEnumerable<UsersNotSercure> GetUsersNotSercure()
         {
             return _context.UsersNotSercure;
         }
 
+        [HttpPost("tryLoginSecure")]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(bool))]
+        [SwaggerResponse((int)HttpStatusCode.BadRequest)]
+        [SwaggerResponse((int)HttpStatusCode.NotFound)]
+        public async Task<IActionResult> TryLoginSecure([FromBody] NamePassword user)
+        {
+            var actualUSerInDb = await _context.UsersSecure.Where(u => u.Name == user.Name).FirstOrDefaultAsync();
+
+            var tryLoginHash = HashPassword(user.Password, actualUSerInDb.Salt);
+
+            return Ok(tryLoginHash == actualUSerInDb.Password);
+        }
+
+        [HttpPost("tryLoginNotSecure")]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(bool))]
+        [SwaggerResponse((int)HttpStatusCode.BadRequest)]
+        [SwaggerResponse((int)HttpStatusCode.NotFound)]
+        public async Task<IActionResult> TryLoginNotSecure([FromBody] NamePassword user)
+        {
+            var actualUSerInDb = await _context.UsersNotSercure.Where(u => u.Name == user.Name).FirstOrDefaultAsync();
+            if (actualUSerInDb == null)
+            {
+                return Ok(string.Format("użytkownik {0} nie istnieje w naszej bazie danych", user.Name));
+            }
+
+            var isPasswordTheSame = user.Password == actualUSerInDb.Password;
+
+            if (isPasswordTheSame)
+            {
+                return Ok(string.Format("zalogowano {0} hasłem {1}, SUKCES!", user.Name, user.Password));
+            }
+            return Ok(string.Format("dla użytkownika {0} hasło {1} nie pasuje, próbuj dalej!", user.Name, user.Password));
+
+        }
+
         // GET: api/UsersNotSercures/5
-        [HttpGet("{id}")]
+        [HttpGet("getInsecureById/{id}")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(UsersNotSercure))]
         [SwaggerResponse((int)HttpStatusCode.BadRequest)]
         [SwaggerResponse((int)HttpStatusCode.NotFound)]
@@ -65,7 +100,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: api/UsersNotSercures/Name
-        [HttpGet("nameSecure/{name}")]
+        [HttpGet("getSecureByName/{name}")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(IEnumerable<UsersNotSercure>))]
         [SwaggerResponse((int)HttpStatusCode.BadRequest)]
         [SwaggerResponse((int)HttpStatusCode.NotFound)]
@@ -87,7 +122,7 @@ namespace WebApplication1.Controllers
             return Ok(usersNotSercure);
         }
 
-        [HttpGet("nameNotSecure/{name}")]
+        [HttpGet("getInsecureByName/{name}")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(IEnumerable<UsersNotSercure>))]
         [SwaggerResponse((int)HttpStatusCode.NotFound)]
         public async Task<IActionResult> GetUsersSercure([FromRoute] string name)
@@ -117,24 +152,45 @@ namespace WebApplication1.Controllers
             return Ok(users);
         }
 
-        // PUT: api/UsersNotSercures/5
-        [HttpPut("{id}")]
-        [SwaggerResponse((int)HttpStatusCode.NotFound)]
-        [SwaggerResponse((int)HttpStatusCode.NoContent)]
+        [HttpPut("changePasswordInsecure/{id}")]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(UsersNotSercure))]
         [SwaggerResponse((int)HttpStatusCode.BadRequest)]
-        public async Task<IActionResult> PutUsersNotSercure([FromRoute] int id, [FromBody] UsersNotSercure usersNotSercure)
+        public async Task<IActionResult> PutUserNotSecure([FromRoute] int id, [FromBody] UsersNotSercure user)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            if (id != usersNotSercure.Id)
+            if (id != user.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(usersNotSercure).State = EntityState.Modified;
+            var command = $"UPDATE UsersNotSercure SET Password = '{user.Password}' WHERE Name = '{user.Name}' ";
+            var sqlConnection = new SqlConnection(_configuration["ConnectionStrings:SISContext"]);
+            sqlConnection.Open();
+            var sqlCommand = new SqlCommand(command, sqlConnection);
+            var reader = await sqlCommand.ExecuteReaderAsync();
+            return Ok("Hasło zmienione");
+        }
+
+        [HttpPut("changePassword/{id}")]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(UsersNotSercure))]
+        [SwaggerResponse((int)HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> PutUserSecure([FromRoute] int id, [FromBody] UsersNotSercure user)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (id != user.Id)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(user).State = EntityState.Modified;
 
             try
             {
@@ -155,11 +211,7 @@ namespace WebApplication1.Controllers
             return NoContent();
         }
 
-        // POST: api/UsersNotSercures
-        [HttpPost]
-        [SwaggerResponse((int)HttpStatusCode.Created)]
-        [SwaggerResponse((int)HttpStatusCode.BadRequest)]
-        public async Task<IActionResult> PostUsersNotSercure([FromBody] UsersNotSercure usersNotSercure)
+        private static string GenerateRandomSalt()
         {
             // generate a 128-bit salt using a secure PRNG
             byte[] salt = new byte[128 / 8];
@@ -167,30 +219,73 @@ namespace WebApplication1.Controllers
             {
                 rng.GetBytes(salt);
             }
-            Console.WriteLine($"Salt: {Convert.ToBase64String(salt)}");
+            return Convert.ToBase64String(salt);
 
+        }
+
+        private static string HashPassword(string password, string salt)
+        {
             // derive a 256-bit subkey (use HMACSHA1 with 10,000 iterations)
-            string hashed = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                password: usersNotSercure.Password,
-                salt: salt,
+            return Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                password: password,
+                salt: Convert.FromBase64String(salt),
                 prf: KeyDerivationPrf.HMACSHA1,
                 iterationCount: 10000,
                 numBytesRequested: 256 / 8));
-            Console.WriteLine($"Hashed: {hashed}");
-            usersNotSercure.Password = hashed;
+        }
+
+        // POST: api/UsersNotSercures
+        [HttpPost("createSecure")]
+        [SwaggerResponse((int)HttpStatusCode.Created)]
+        [SwaggerResponse((int)HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> PostUsersSecure([FromBody] NamePassword user)
+        {
+            var saltStr = GenerateRandomSalt();
+            var hashed = HashPassword(user.Password, saltStr);
 
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            _context.UsersNotSercure.Add(usersNotSercure);
+
+            var dbUSer = new UsersSecure
+            {
+                Name = user.Name,
+                Password = hashed,
+                Salt = saltStr
+            };
+
+            _context.UsersSecure.Add(dbUSer);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUsersNotSercure", new { id = usersNotSercure.Id }, usersNotSercure);
+            return CreatedAtAction("GetUsersNotSercure", new { id = dbUSer.Id }, dbUSer);
         }
 
+        [HttpPost("createInsecure")]
+        [SwaggerResponse((int)HttpStatusCode.Created)]
+        [SwaggerResponse((int)HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> PostUsersNotSecure([FromBody] NamePassword user)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var dbUser = new UsersNotSercure
+            {
+                Name = user.Name,
+                Password = user.Password
+            };
+            _context.UsersNotSercure.Add(dbUser);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetUsersNotSercure", new { id = dbUser.Id }, dbUser);
+        }
+
+       
+
         // DELETE: api/UsersNotSercures/5
-        [HttpDelete("{id}")]
+        [HttpDelete("deleteInsecureById/{id}")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(UsersNotSercure))]
         [SwaggerResponse((int)HttpStatusCode.NotFound)]
         [SwaggerResponse((int)HttpStatusCode.BadRequest)]

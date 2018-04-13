@@ -8,6 +8,8 @@
   <ItemGroup>
     <Compile Remove="Migrations\20180412175638_Seeding.cs" />
     <Compile Remove="Migrations\20180412175638_Seeding.Designer.cs" />
+    <Compile Remove="Migrations\20180413155600_UsersSecure.cs" />
+    <Compile Remove="Migrations\20180413155600_UsersSecure.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,7 +19,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.1.0-preview2-final" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.1.0-preview2-final" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="2.4.0" />
   </ItemGroup>
