@@ -33,7 +33,7 @@ namespace WebApplication1
             services.AddSingleton<IConfiguration>(Configuration);
             services.AddDbContext<SISContext>(options =>
             {
-                options.UseSqlServer(Configuration["ConnectionString"],
+                options.UseSqlServer(Configuration["ConnectionStrings:SISContext"],
                     sqlServerOptionsAction: sqlOptions =>
                     {
                         sqlOptions.
@@ -80,10 +80,10 @@ namespace WebApplication1
             }
 
             app.UseMvc();
-            app.UseSwagger()
-                .UseSwaggerUI(c =>
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
                 {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");  
                 }); ;
 
         }

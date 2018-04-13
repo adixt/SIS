@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.Extensions.Configuration;
 using Remotion.Linq.Parsing.Structure;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using WebApplication1.Models;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
@@ -42,6 +44,9 @@ namespace WebApplication1.Controllers
 
         // GET: api/UsersNotSercures/5
         [HttpGet("{id}")]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(UsersNotSercure))]
+        [SwaggerResponse((int)HttpStatusCode.BadRequest)]
+        [SwaggerResponse((int)HttpStatusCode.NotFound)]
         public async Task<IActionResult> GetUsersSercure([FromRoute] int id)
         {
             if (!ModelState.IsValid)
@@ -60,8 +65,10 @@ namespace WebApplication1.Controllers
         }
 
         // GET: api/UsersNotSercures/Name
-        [Route("nameSecure/{name}")]
-        [HttpGet("{name}")]
+        [HttpGet("nameSecure/{name}")]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(IEnumerable<UsersNotSercure>))]
+        [SwaggerResponse((int)HttpStatusCode.BadRequest)]
+        [SwaggerResponse((int)HttpStatusCode.NotFound)]
         public async Task<IActionResult> GetUsersNotSercure([FromRoute] string name)
         {
             if (!ModelState.IsValid)
@@ -69,8 +76,8 @@ namespace WebApplication1.Controllers
                 return BadRequest(ModelState);
             }
 
-            var usersNotSercureQ =  _context.UsersNotSercure.Where(m => m.Name == name);
-            var sql = usersNotSercureQ.ToSql();
+            var usersNotSercureQ = _context.UsersNotSercure.Where(m => m.Name == name);
+            //var sql = usersNotSercureQ.ToSql();
             var usersNotSercure = await usersNotSercureQ.ToListAsync();
             if (usersNotSercure == null)
             {
@@ -78,14 +85,15 @@ namespace WebApplication1.Controllers
             }
 
             return Ok(usersNotSercure);
-        }       
+        }
 
-        [Route("name/{name}")]
-        [HttpGet("{name}")]
+        [HttpGet("nameNotSecure/{name}")]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(IEnumerable<UsersNotSercure>))]
+        [SwaggerResponse((int)HttpStatusCode.NotFound)]
         public async Task<IActionResult> GetUsersSercure([FromRoute] string name)
         {
-            var command = $"SELECT * FROM UsersNotSercure WHERE Name = '{name}' ";            
-            var sqlConnection = new SqlConnection(_configuration["ConnectionString"]);
+            var command = $"SELECT * FROM UsersNotSercure WHERE Name = '{name}' ";
+            var sqlConnection = new SqlConnection(_configuration["ConnectionStrings:SISContext"]);
             sqlConnection.Open();
             var sqlCommand = new SqlCommand(command, sqlConnection);
             var reader = await sqlCommand.ExecuteReaderAsync();
@@ -111,6 +119,9 @@ namespace WebApplication1.Controllers
 
         // PUT: api/UsersNotSercures/5
         [HttpPut("{id}")]
+        [SwaggerResponse((int)HttpStatusCode.NotFound)]
+        [SwaggerResponse((int)HttpStatusCode.NoContent)]
+        [SwaggerResponse((int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> PutUsersNotSercure([FromRoute] int id, [FromBody] UsersNotSercure usersNotSercure)
         {
             if (!ModelState.IsValid)
@@ -146,6 +157,8 @@ namespace WebApplication1.Controllers
 
         // POST: api/UsersNotSercures
         [HttpPost]
+        [SwaggerResponse((int)HttpStatusCode.Created)]
+        [SwaggerResponse((int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> PostUsersNotSercure([FromBody] UsersNotSercure usersNotSercure)
         {
             // generate a 128-bit salt using a secure PRNG
@@ -170,7 +183,7 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest(ModelState);
             }
-           _context.UsersNotSercure.Add(usersNotSercure);
+            _context.UsersNotSercure.Add(usersNotSercure);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetUsersNotSercure", new { id = usersNotSercure.Id }, usersNotSercure);
@@ -178,6 +191,9 @@ namespace WebApplication1.Controllers
 
         // DELETE: api/UsersNotSercures/5
         [HttpDelete("{id}")]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(UsersNotSercure))]
+        [SwaggerResponse((int)HttpStatusCode.NotFound)]
+        [SwaggerResponse((int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> DeleteUsersNotSercure([FromRoute] int id)
         {
             if (!ModelState.IsValid)
