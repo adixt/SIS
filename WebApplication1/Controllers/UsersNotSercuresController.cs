@@ -38,9 +38,15 @@ namespace WebApplication1.Controllers
 
         // GET: api/UsersNotSercures
         [HttpGet("getAllInsecure")]
-        public IEnumerable<UsersNotSercure> GetUsersNotSercure()
+        public async Task<IEnumerable<UsersNotSercure>> GetUsersNotSercure()
         {
-            return _context.UsersNotSercure;
+            return await _context.UsersNotSercure.ToListAsync();
+        }
+
+        [HttpGet("getAllSecure")]
+        public async Task<IEnumerable<UsersSecure>> GetUsersSecure()
+        {
+            return await _context.UsersSecure.ToListAsync();
         }
 
         [HttpPost("tryLoginSecure")]
