@@ -27,6 +27,8 @@ namespace WebApplication1.Models
                 entity.Property(e => e.Password)
                     .IsRequired()
                     .IsUnicode(false);
+
+                entity.HasIndex(e => e.Name).IsUnique();
             });
 
             modelBuilder.Entity<UsersSecure>(entity =>
@@ -42,6 +44,8 @@ namespace WebApplication1.Models
                 entity.Property(e => e.Salt)
                    .IsRequired()
                    .IsUnicode(true);
+
+                entity.HasIndex(e => e.Name).IsUnique();
             });
 
             modelBuilder.Entity<UsersNotSercure>().HasData(

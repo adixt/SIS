@@ -295,7 +295,12 @@ namespace WebApplication1.Controllers
             };
 
             _context.UsersSecure.Add(dbUSer);
-            await _context.SaveChangesAsync();
+            try { await _context.SaveChangesAsync(); }
+            catch(Exception ex)
+            {
+                var e = ex.ToString();
+                return BadRequest(false);
+            }
 
             return CreatedAtAction("GetUsersNotSercure", new { id = dbUSer.Id }, dbUSer);
         }
