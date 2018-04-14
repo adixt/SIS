@@ -82,7 +82,7 @@ namespace WebApplication1.Controllers
         [SwaggerResponse((int)HttpStatusCode.NotFound)]
         public async Task<IActionResult> TryLoginNotSecure([FromBody] NamePassword user)
         {
-            var command = $"SELECT * FROM UsersNotSercure WHERE Name = '{user.Name}' ";
+            var command = $"SELECT * FROM UsersNotSercure WHERE Name = '{user.Name}' AND Password = '{user.Password}' ";
             var sqlConnection = new SqlConnection(_configuration["ConnectionStrings:SISContext"]);
             sqlConnection.Open();
             var sqlCommand = new SqlCommand(command, sqlConnection);
@@ -105,20 +105,21 @@ namespace WebApplication1.Controllers
                 return NotFound(string.Format("użytkownik {0} nie istnieje w naszej bazie danych", user.Name));
             }
 
-            var isPasswordTheSame = users
-                .Any(u => u.Password == user.Password);
+            //var isPasswordTheSame = users
+            //    .Any(u => u.Password == user.Password);
 
-            if (isPasswordTheSame)
+            //if (isPasswordTheSame)
+            //{
+            //var foundUser = users.FirstOrDefault(u => u.Password == user.Password);
+            var foundUser = users.FirstOrDefault();
+            var body = new
             {
-                var foundUser = users.FirstOrDefault(u => u.Password == user.Password);
-                var body = new
-                {
-                    message = string.Format("zalogowano {0} hasłem {1}, SUKCES!", foundUser.Name, user.Password),
-                    isAdmin = foundUser.IsAdmin
-                };
-                return Ok(body);
-            }
-            return BadRequest(string.Format("dla użytkownika {0} hasło {1} nie pasuje, próbuj dalej!", user.Name, user.Password));
+                message = string.Format("zalogowano {0} hasłem {1}, SUKCES!", foundUser.Name, user.Password),
+                isAdmin = foundUser.IsAdmin
+            };
+            return Ok(body);
+            //}
+            //return BadRequest(string.Format("dla użytkownika {0} hasło {1} nie pasuje, próbuj dalej!", user.Name, user.Password));
 
         }
 
@@ -302,7 +303,7 @@ namespace WebApplication1.Controllers
 
             _context.UsersSecure.Add(dbUSer);
             try { await _context.SaveChangesAsync(); }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 var e = ex.ToString();
                 return BadRequest(false);
