@@ -49,7 +49,8 @@ namespace WebApplication1.Models
                 {
                     Id = 1,
                     Name = "adam",
-                    Password = "test"
+                    Password = "test",
+                    IsAdmin=true
                 }, new UsersNotSercure
                 {
                     Id = 2,
@@ -67,8 +68,18 @@ namespace WebApplication1.Models
                     Password = "test4"
                 });
 
+            modelBuilder.Entity<UsersSecure>().HasData(
+                new UsersSecure
+                {
+                    Id = 1,
+                    Name = "adam",
+                    Password = "My1VzKf/HYSEfmWCSpXaJc7GhKApd8ZP11waj8CuoSw=",
+                    Salt = "S3Cr7zOOK6nNqjbnQGUFnA==",
+                    IsAdmin = true
+                });
+
         }
 
-       
+
     }
 }

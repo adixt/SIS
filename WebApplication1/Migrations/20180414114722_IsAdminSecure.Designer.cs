@@ -10,9 +10,10 @@ using WebApplication1.Models;
 namespace WebApplication1.Migrations
 {
     [DbContext(typeof(SISContext))]
-    partial class SISContextModelSnapshot : ModelSnapshot
+    [Migration("20180414114722_IsAdminSecure")]
+    partial class IsAdminSecure
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,7 +40,7 @@ namespace WebApplication1.Migrations
                     b.ToTable("UsersNotSercure");
 
                     b.HasData(
-                        new { Id = 1, IsAdmin = true, Name = "adam", Password = "test" },
+                        new { Id = 1, IsAdmin = false, Name = "adam", Password = "test" },
                         new { Id = 2, IsAdmin = false, Name = "rafal", Password = "test2" },
                         new { Id = 3, IsAdmin = false, Name = "ewa", Password = "test3" },
                         new { Id = 4, IsAdmin = false, Name = "asia", Password = "test4" }
@@ -68,10 +69,6 @@ namespace WebApplication1.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UsersSecure");
-
-                    b.HasData(
-                        new { Id = 1, IsAdmin = true, Name = "adam", Password = "My1VzKf/HYSEfmWCSpXaJc7GhKApd8ZP11waj8CuoSw=", Salt = "S3Cr7zOOK6nNqjbnQGUFnA==" }
-                    );
                 });
 #pragma warning restore 612, 618
         }

@@ -6,6 +6,7 @@ using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -49,10 +50,24 @@ namespace WebApplication1.Controllers
         public async Task<IActionResult> TryLoginSecure([FromBody] NamePassword user)
         {
             var actualUSerInDb = await _context.UsersSecure.Where(u => u.Name == user.Name).FirstOrDefaultAsync();
-
+            if (actualUSerInDb == null)
+            {
+                return NotFound(false);
+            }
             var tryLoginHash = HashPassword(user.Password, actualUSerInDb.Salt);
+            var isPasswordCorrect = tryLoginHash == actualUSerInDb.Password;
 
-            return Ok(tryLoginHash == actualUSerInDb.Password);
+            if (!isPasswordCorrect)
+            {
+                return BadRequest(false);
+            }
+
+            var body = new
+            {
+                message = tryLoginHash == actualUSerInDb.Password,
+                isAdmin = actualUSerInDb.IsAdmin
+            };
+            return Ok(body);
         }
 
         [HttpPost("tryLoginNotSecure")]
@@ -61,19 +76,43 @@ namespace WebApplication1.Controllers
         [SwaggerResponse((int)HttpStatusCode.NotFound)]
         public async Task<IActionResult> TryLoginNotSecure([FromBody] NamePassword user)
         {
-            var actualUSerInDb = await _context.UsersNotSercure.Where(u => u.Name == user.Name).FirstOrDefaultAsync();
-            if (actualUSerInDb == null)
+            var command = $"SELECT * FROM UsersNotSercure WHERE Name = '{user.Name}' ";
+            var sqlConnection = new SqlConnection(_configuration["ConnectionStrings:SISContext"]);
+            sqlConnection.Open();
+            var sqlCommand = new SqlCommand(command, sqlConnection);
+            var reader = await sqlCommand.ExecuteReaderAsync();
+            var users = new List<UsersNotSercure>();
+            while (await reader.ReadAsync())
             {
-                return Ok(string.Format("użytkownik {0} nie istnieje w naszej bazie danych", user.Name));
+                var x = new UsersNotSercure
+                {
+                    Id = reader.GetInt32(0),
+                    Name = reader.GetString(1),
+                    Password = reader.GetString(2),
+                    IsAdmin = reader.GetBoolean(3)
+                };
+                users.Add(x);
             }
 
-            var isPasswordTheSame = user.Password == actualUSerInDb.Password;
+            if (users.Count == 0)
+            {
+                return NotFound(string.Format("użytkownik {0} nie istnieje w naszej bazie danych", user.Name));
+            }
+
+            var isPasswordTheSame = users
+                .Any(u => u.Password == user.Password);
 
             if (isPasswordTheSame)
             {
-                return Ok(string.Format("zalogowano {0} hasłem {1}, SUKCES!", user.Name, user.Password));
+                var foundUser = users.FirstOrDefault(u => u.Password == user.Password);
+                var body = new
+                {
+                    message = string.Format("zalogowano {0} hasłem {1}, SUKCES!", foundUser.Name, user.Password),
+                    isAdmin = foundUser.IsAdmin
+                };
+                return Ok(body);
             }
-            return Ok(string.Format("dla użytkownika {0} hasło {1} nie pasuje, próbuj dalej!", user.Name, user.Password));
+            return BadRequest(string.Format("dla użytkownika {0} hasło {1} nie pasuje, próbuj dalej!", user.Name, user.Password));
 
         }
 
@@ -282,7 +321,7 @@ namespace WebApplication1.Controllers
             return CreatedAtAction("GetUsersNotSercure", new { id = dbUser.Id }, dbUser);
         }
 
-       
+
 
         // DELETE: api/UsersNotSercures/5
         [HttpDelete("deleteInsecureById/{id}")]

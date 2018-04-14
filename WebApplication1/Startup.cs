@@ -29,6 +29,8 @@ namespace WebApplication1
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+
+            services.AddCors();
             services.AddMvc();
             services.AddSingleton<IConfiguration>(Configuration);
             services.AddDbContext<SISContext>(options =>
@@ -69,6 +71,7 @@ namespace WebApplication1
                     TermsOfService = "Terms Of Service"
                 });
             });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -79,11 +82,17 @@ namespace WebApplication1
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseCors(builder => builder
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials());
+
             app.UseMvc();
             app.UseSwagger();
             app.UseSwaggerUI(c =>
                 {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");  
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
                 }); ;
 
         }
