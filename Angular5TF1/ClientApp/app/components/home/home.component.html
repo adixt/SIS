@@ -1,0 +1,42 @@
+<h1>Hello, world!</h1>
+<p>Welcome to our SIS app:</p>
+<ul>
+
+    <li>
+        Login Message: login both secure and insecure with credentials,
+        then check out the output.
+        <ul>
+            <li>
+                name <b>adam</b> and password <b>test</b>
+            </li>
+            <li>
+                name <b>whatever</b> and password <b>test</b>
+            </li>
+            <li>
+                name <b>adam</b> and password <b>whatever</b>
+            </li>
+        </ul>
+    </li>
+    <li>
+        SQL Injection: try login insecure with name <b>rafal' or '1' = '1</b> and password <b>test</b>,
+        then try the same in secure and check the output
+    </li>
+    <li>Password storage: create user insecure and secure, then check out the output</li>
+
+    <li>
+        XSS: open developers console and type:
+        <ul>
+            <li>
+                <i>
+                    var adminDiv = document.getElementById('adminDiv');
+                </i>
+            </li>
+            <li>
+                <i>
+                    adminDiv.style.visibility = 'visible';
+                </i>
+            </li>
+            <li>BE ADMIN ]:-></li>
+        </ul>
+    </li>
+</ul>

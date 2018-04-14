@@ -1,0 +1,70 @@
+﻿<h1>SIS</h1>
+
+<div class="loader" *ngIf="isDisabled"></div>
+<div [style.opacity]="isDisabled ?  0.5 : 1">
+    <div>
+        <h2>INSECURE APP</h2>
+
+
+        <label>New Login </label>
+        <input [(ngModel)]="NewLogin">
+
+        <label>New Password </label>
+        <input type="password" [(ngModel)]="NewPassword">
+        <button [attr.disabled]="isDisabled? '' : null" (click)="tryCreateInsecure()">Create</button>
+
+        <div>{{CreateInsecureOutput}}</div>
+        <hr />
+        <label>Login </label>
+        <input [(ngModel)]="Login">
+
+        <label>Password </label>
+        <input type="password" [(ngModel)]="Password">
+        <button [attr.disabled]="isDisabled? '' : null" (click)="tryLoginInsecure()">Login</button>
+
+        <div>{{InsecureOutput}}</div>
+        <hr />
+        <div [style.background-color]="IsAdmin ? 'green' : 'red'">Czy jesteś adminem? {{IsAdmin ? "tak" : "nie" }} </div>
+
+        <div [style.visibility]="IsAdmin ? 'visible' : 'collapse' " id="adminDiv">
+            <h3><== ONLY ADMIN CAN SEE THIS ==></h3>
+
+            <button (click)="getAllUsers()" [attr.disabled]="isDisabled? '' : null">get All Users</button>
+            <div>{{AllUsers}}</div>
+        </div>
+    </div>
+    <hr />
+    <hr />
+    <hr />
+    <div>
+        <h2>SECURE APP</h2>
+
+
+        <label>New Login Secure </label>
+        <input [(ngModel)]="NewLoginSecure">
+
+        <label>New Password Secure</label>
+        <input type="password" [(ngModel)]="NewPasswordSecure">
+        <button (click)="tryCreateSecure()" [attr.disabled]="isDisabled? '' : null">Create Secure</button>
+
+        <div>{{CreateSecureOutput}}</div>
+        <hr />
+        <label>Login Secure</label>
+        <input [(ngModel)]="LoginSecure">
+
+        <label>Password Secure</label>
+        <input type="password" [(ngModel)]="PasswordSecure">
+        <button [attr.disabled]="isDisabled? '' : null" (click)="tryLoginSecure()">Login Secure</button>
+
+        <div>{{SecureOutput}}</div>
+        <hr />
+        <div [style.background-color]="IsAdminSecure ? 'green' : 'red'">Czy jesteś adminem secure? {{IsAdminSecure ? "tak" : "nie" }} </div>
+
+        <div *ngIf="IsAdminSecure">
+            <h3><== ONLY ADMIN CAN SEE THIS ==></h3>
+            <button (click)="getAllUsersSecure()" [attr.disabled]="isDisabled? '' : null">get All Users Secure</button>
+            <div>{{AllUsersSecure}}</div>
+        </div>
+    </div>
+</div>
+
